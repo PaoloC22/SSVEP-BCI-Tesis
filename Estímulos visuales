@@ -1,1 +1,176 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jan  8 21:42:41 2025
+
+@author: LENOVO
+"""
+
+from numpy import number
+from psychopy.visual import Rect, Window, TextStim
+from psychopy.core import wait
+from psychopy.core import wait
+import socket
+# FLICKER 12HZ DEBERIA SALIR 12.5 EN LA PRACTICA
+from psychopy import visual, event, core
+from PIL import Image
+import time
+import datetime
+class stimulus:
+    screenWidth = 1536  # 1920
+    screenHeight = 864  # 1080
+    posibles_rectangs = ["Primer rectangulo", "Segundo rectangulo", "Tercer rectangulo", "Cuarto rectangulo"]
+    win = None
+    freq_text = None
+    rectang1 = rectang2 = None
+    freqs = [8, 10]
+
+    def init(self):
+        self.win = Window(color="black", screen=0, units="pix", size=[stimulus.screenWidth, stimulus.screenHeight],
+                          waitBlanking=False,fullscr=False)
+        self.win.mouseVisible = False
+        self.freq_text = TextStim(win=self.win, text="", color="black", height=100)
+
+        #self.rectang1 = self.makeRectang()
+        #self.rectang2 = self.makeRectang()
+        self.vertical = [0,0] # IZQUIERDA PRIMERO       #-332 es el limite para nuestro flicker
+        self.vertical2 = [200, -280] #DERECHO PRIMERO
+        self.vertical3 = [-600,-280] #IZQUIERDA EXTREMO
+        self.vertical4 = [600, -280] #DERECHO EXTREMO
+        self.pos1=0
+        self.Maxbajo=-332
+        self.pos2=0
+        self.contador= 0
+        self.arriba=True
+        self.new_position=0
+        #self.position_actual=0
+
+
+        self.freq_15Hz=[1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0]
+        self.freq_12Hz=[1,1,0,0,0,1,1,1,0,0,1,1,0,0,0,1,1,1,0,0,1,1,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,0,0,0,1,1,1,0,0,1,1,0,0,0,1,1,1,0,0]
+        self.freq_10Hz=[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0]
+        self.freq_9Hz =[1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,0] #freq 9
+        self.freq_8Hz =[1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0]
+        self.freq_6Hz =[1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0] #freq 6
+        self.freq_7Hz =[1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0]
+    def makeRectang_move(self,position):
+        rect = Rect(win=self.win, units="pix", width=200, height=200, pos=self.position_mov(position), fillColor="white")
+        return rect
+
+    def makeRectang_static(self,position):
+        rect = Rect(win=self.win, units="pix", width=200, height=200, pos=position, fillColor="white")
+        return rect
+    def position_mov(self,position):
+        if self.contador < 100:
+            self.new_position=self._movetop(position)
+        else:
+            #self._movebot(position)
+            pass
+        return self.new_position
+    def _movetop(self,position):
+        position_past = position
+
+        if self.arriba == True:
+            #print("entró acá pri")
+            self.pos1 = self.pos1 + 2
+            position_presente = [position_past[0],position_past[1] + self.pos1]
+            if position_presente[1] > 250:
+                #print("entró acá")
+                self.arriba = False
+                self.contador +=1
+                self.position_actual=position_presente
+            #return position_presente
+        else:
+            self.pos2 = self.pos2 - 2
+            position_presente = [position_past[0],self.position_actual[1] + self.pos2]
+            if position_presente[1] < -250:
+                self.arriba=True
+                self.pos1=0
+                self.pos2=0
+                #print("jaja")
+        return position_presente
+
+    def drawRectangs(self):
+        #self.rectang1.draw()
+        self.rectang2.draw()
+        #self.rectang3.draw()
+        #self.rectang4.draw()
+
+
+    def clearRectangs(self):
+        #self.rectang1.setOpacity(0.0)
+        self.rectang2.setOpacity(0.0)
+        #self.rectang3.setOpacity(0.0)
+        #self.rectang4.setOpacity(0.0)
+    def Conexion(self):
+        host = "169.254.87.226"
+        #host="192.168.1.51"
+        #la prueba 2 de la freq 10, se puede confundir con la de 8 hz
+        port = 8010
+        client_socket = socket.socket()
+        client_socket.connect((host, port))
+        message = str(1)
+        client_socket.send(message.encode())
+        client_socket.close()
+    def tiempo_adquisicion(self, tiempo):
+        return tiempo * 60
+    def flickStimulusHz(self, frameN, rectangN, FreqFlick): #HICIMOS LA 5 DE LA FREQ 12
+        if FreqFlick[frameN] == 1:
+            rectangN.setOpacity(1.0)
+        if FreqFlick[frameN] == 0:
+            rectangN.setOpacity(0.0)
+
+    #def getFrameRate(self):
+        #win_frame = Window(color="white", screen=1, units="pix", size=[stimulus.screenWidth, stimulus.screenHeight]
+                           #,waitBlanking=False,fullscr=True)
+        #print(win_frame.getActualFrameRate())
+    def Experiment_Flickers_Move(self):
+        self.init()
+        self.Conexion()
+        #s = time.time()
+        print(datetime.datetime.now())
+        self.Trialclock = core.Clock()
+        while self.Trialclock.getTime() < 6:
+            for frameN in range(60):
+                """LOS FLICKERS VAN DE MENOR A MAYOR RESPECTO A LA FREQ Y DE IZQUIERDA A DERECHA SEGUN LA POSICION"""
+                #self.rectang1 = self.makeRectang_move(self.vertical3)
+                self.rectang2 = self.makeRectang_move(self.vertical) #
+                #self.rectang3 = self.makeRectang_move(self.vertical2)
+                #self.rectang4 = self.makeRectang_move(self.vertical4) #
+
+                #self.flickStimulusHz(frameN, self.rectang1,self.freq_7Hz)
+                self.flickStimulusHz(frameN, self.rectang2,self.freq_7Hz)#--
+                #self.flickStimulusHz(frameN, self.rectang3,self.freq_9Hz)#--
+                #self.flickStimulusHz(frameN, self.rectang4,self.freq_10Hz)#no
+                self.drawRectangs()
+                self.win.flip(clearBuffer=True)
+        #t = time.time()
+        print("as: ", self.Trialclock.getTime())
+
+    def Experiment_Flickers_Static(self):
+        self.init()
+        self.Conexion()
+        #s = time.time()
+        #print(datetime.datetime.now())
+        self.Trialclock = core.Clock()
+        while self.Trialclock.getTime() < 6:
+            for frameN in range(60):
+                """LOS FLICKERS VAN DE MENOR A MAYOR RESPECTO A LA FREQ Y DE IZQUIERDA A DERECHA SEGUN LA POSICION"""
+                #self.rectang1 = self.makeRectang_static(self.vertical3)
+                self.rectang2 = self.makeRectang_static(self.vertical) #
+                #self.rectang3 = self.makeRectang_static(self.vertical2)
+                #self.rectang4 = self.makeRectang_static(self.vertical4) #
+
+                #self.flickStimulusHz(frameN, self.rectang1,self.freq_7Hz)
+                self.flickStimulusHz(frameN, self.rectang2,self.freq_7Hz)#--
+                #self.flickStimulusHz(frameN, self.rectang3,self.freq_9Hz)#--
+                #self.flickStimulusHz(frameN, self.rectang4,self.freq_10Hz)#no
+                self.drawRectangs()
+                self.win.flip(clearBuffer=True)
+        #t = time.time()
+        #print("as: ", self.Trialclock.getTime())
+
+if __name__ == "__main__":
+    s = stimulus()
+    s.Experiment_Flickers_Static()
+
 
