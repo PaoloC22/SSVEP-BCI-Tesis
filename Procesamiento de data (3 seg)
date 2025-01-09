@@ -1,0 +1,567 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar  2 18:13:02 2023
+
+@author: Luis Casas
+"""
+
+import pandas as pd  
+import scipy.io
+import numpy as np
+from scipy.signal import butter, lfilter
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from scipy import signal
+import matplotlib.pyplot as plt
+from scipy.misc import electrocardiogram
+from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_prominences
+import matplotlib.pyplot as plt
+
+#---------------------------------------- LECTURA DE LOS DATOS .MAT   ----------------------------------------------------
+# Datos = open('Datos_Paralelismo_7_ms.csv') 
+# numpy_array = np.loadtxt(Datos)
+
+import csv
+import numpy
+
+
+
+
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from scipy import signal
+import matplotlib.pyplot as plt
+
+import os
+from os import listdir
+from os.path import isfile, join
+import sys
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import glob
+
+
+
+# mypath='C:/Users/Luis Casas/Desktop/TESIS2/BASE DE DATOS DESCARGADA/BD-NUEVA-OTRAS-FREQ/NEW/Datos_move_Paolo1/'
+# onlyfiles = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]
+# images = np.empty(len(onlyfiles), dtype=object)    
+# for n in range(0, len(onlyfiles)):    
+#     images[n] = mypath,onlyfiles[n]) )
+    
+     
+PATH_5= 'C:/Users/Luis Casas/PycharmProjects/pythonProject1/S6-4FREQ/' #S5-4FREQ FALTA CAMBIAR SUS 10 PRUEBAS DE 10 HZ
+
+all_files_1 = glob.glob(PATH_5 + "/*.csv")
+
+tamano_in=250
+tamano_fi=1250
+
+Datos_Raw_Sujeto_1=[]
+Datos_Raw_Sujeto_1=np.zeros((1000,3,60),dtype=float)
+
+#10-7-8-9
+
+a=0
+for filename in all_files_1:
+    
+    #read file here
+    # if you decide to use pandas you might need to use the 'sep' paramaeter as well
+    #df = pd.read_csv(filename, index_col=None, header=0)
+    df1=pd.read_csv(filename, names="a",)
+    df1=df1['a'].str.split(',', expand=True)
+    #print(np.shape(df1))
+    df1=df1.iloc[tamano_in:tamano_fi,[1,3,5]]
+    
+    Datos_Raw_Sujeto_1[:,:,a]=df1
+    
+    ######LOS PRIMEROS 20 DATOS SON DE LA FREQ 10 Y LUEGO 8
+   # df=df.to_numpy(dtype=float)
+    a=a+1
+
+
+datos_iniciales=1000
+canales_iniciales=3
+pruebas_iniciales=60
+
+
+Datos_total_TRCA_SINMEDIA_10=[]
+Datos_total_TRCA_SINMEDIA_10=np.zeros((datos_iniciales,canales_iniciales,pruebas_iniciales),dtype=float)
+
+
+for n in range(0,pruebas_iniciales):
+    for m in range(0,3):
+            Datos_total_TRCA_SINMEDIA_10[:,m,n]= Datos_Raw_Sujeto_1[:,m,n] - np.mean(Datos_Raw_Sujeto_1[:,m,n]) #se obtiene los datos a 12Hz para la Prueba1
+
+
+
+#Normalizacion
+
+Datos_total_TRCA_Norm_10=[]
+Datos_total_TRCA_Norm_10=np.zeros((datos_iniciales,canales_iniciales,pruebas_iniciales),dtype=float)
+
+
+for n in range(0,3):
+    for k in range(0,pruebas_iniciales):
+    
+            Datos_total_TRCA_Norm_10[:,n,k] = (Datos_total_TRCA_SINMEDIA_10[:,n,k] - np.amin(Datos_total_TRCA_SINMEDIA_10[:,n,k])) / (np.amax(Datos_total_TRCA_SINMEDIA_10[:,n,k]) - np.amin(Datos_total_TRCA_SINMEDIA_10[:,n,k]))
+            Datos_total_TRCA_Norm_10[:,n,k]= 2*Datos_total_TRCA_Norm_10[:,n,k]-1
+
+
+
+data_3seg=750
+Datos_3seg=[]
+Datos_3seg=np.zeros((data_3seg,canales_iniciales,pruebas_iniciales),dtype=float)
+
+len_inicial=125
+len_final=len_inicial+data_3seg
+for n in range(0,3):
+    for k in range(0,pruebas_iniciales):
+    
+            Datos_3seg[:,n,k]= Datos_total_TRCA_Norm_10[len_inicial:len_final,n,k]
+
+
+
+
+
+# Freq_10=Datos_total_TRCA_Norm_10[:,:,:15]
+# Freq_7=Datos_total_TRCA_Norm_10[:,:,15:30]
+# Freq_8=Datos_total_TRCA_Norm_10[:,:,30:45]
+# Freq_9=Datos_total_TRCA_Norm_10[:,:,45:60]
+
+
+
+# Datos_CCA_10_7_8_9=np.stack((Freq_7,Freq_8,Freq_9,Freq_10),axis=3)
+# Datos_CCA_10_7_8_9=np.reshape(Datos_CCA_10_7_8_9,(1000,3,60))
+
+
+
+# np.save("Datos_SSVEPmove_S1_D_C_P.npy",Datos_CCA_10_7_8_9)
+
+
+        
+        
+# Datos_TRCA_8_10_40p=np.stack((Datos_total_TRCA_Norm_6,Datos_total_TRCA_Norm_10),axis=3)
+# Datos_TRCA_8_10_40p1=np.reshape(Datos_TRCA_8_10_40p,(1000,3,40))
+
+
+
+# np.save("Datos_SSVEPestatico_Majo_D_C_P.npy",Datos_TRCA_8_10_40p1)
+# np.save("Datos_SSVEPestatico_Paolo_D_C_P.npy",Datos_TRCA_8_10_40p1)
+# np.save("Datos_SSVEPmove_Paolo_D_C_P.npy",Datos_TRCA_8_10_40p1)
+# np.save("Datos_SSVEPestatico_Paolo1_D_C_P.npy",Datos_TRCA_8_10_40p1)
+# np.save("Datos_SSVEPmove_Majo_D_C_P.npy",Datos_TRCA_8_10_40p1)
+
+
+# Datos_TRCA_filtrado=np.transpose(Datos_TRCA_filtrado,(1,2,0))
+lowcut=4
+highcut=40
+
+Fs=250
+order=4
+nyq = 0.5 * Fs
+low = lowcut / nyq
+high = highcut / nyq
+
+b, a = butter(order, [low, high], btype='bandpass')
+
+
+datos_1seg=data_3seg
+pruebas_fin=60
+canales=3
+
+filtrado_Datos_12Hz=[]
+filtrado_Datos_12Hz=np.zeros((datos_1seg,canales,pruebas_fin))
+
+filtrado_Datos_15Hz=[]
+filtrado_Datos_15Hz=np.zeros((datos_1seg,canales,pruebas_fin))
+
+
+NN=1024
+#-----------------------------------FFT OZ 11 Hz--------------------------------------
+FFT_Datos_15Hz=[]
+FFT_Datos_15Hz=np.zeros((NN,canales,pruebas_fin),dtype=complex)
+
+FFTa_Datos_15Hz=[]
+FFTa_Datos_15Hz=np.zeros((NN,canales,pruebas_fin),dtype=complex)
+
+FFTab_Datos_15Hz=[]
+FFTab_Datos_15Hz=np.zeros((NN,canales,pruebas_fin),dtype=float)
+
+
+
+Frecuencias_total15=np.arange(start = -NN/2,stop = NN/2)*Fs/NN
+
+
+#SE REALIZA LA FFT Y SE EXTRAE LA DATA IMPORTANTE, PARA LUEGO NORMALIZARLA
+
+for n in range(0,pruebas_fin):
+    for m in range(0,canales):
+ 
+            filtrado_Datos_15Hz[:,m,n] = lfilter(b, a, Datos_3seg[:,m,n])          
+            
+            FFT_Datos_15Hz[:,m,n] = np.fft.fft(filtrado_Datos_15Hz[:,m,n],NN)
+            FFTa_Datos_15Hz[:,m,n] = np.fft.fftshift(FFT_Datos_15Hz[:,m,n])
+            FFTab_Datos_15Hz[:,m,n]=np.abs(FFTa_Datos_15Hz[:,m,n])
+     
+
+# Datos_TRCA_8_10_40p=np.stack((filtrado_Datos_12Hz,filtrado_Datos_15Hz),axis=3)
+# Datos_TRCA_8_10_40p1=np.reshape(Datos_TRCA_8_10_40p,(1000,3,40))
+
+#ESTO SIRVE PARA LOS SUJETOS 1,3,4,5,6
+Freq_10=filtrado_Datos_15Hz[:,:,:15]
+Freq_7=filtrado_Datos_15Hz[:,:,15:30]
+Freq_8=filtrado_Datos_15Hz[:,:,30:45]
+Freq_9=filtrado_Datos_15Hz[:,:,45:60]
+
+
+# #ESTO SIRVE SOLO PARA SUJETO 2
+# Freq_7=filtrado_Datos_15Hz[:,:,:15]
+# Freq_9=filtrado_Datos_15Hz[:,:,15:30]
+# Freq_10=filtrado_Datos_15Hz[:,:,30:45]
+# Freq_8=filtrado_Datos_15Hz[:,:,45:60]
+
+
+
+Datos_CCA_10_7_8_91=np.stack((Freq_7,Freq_8,Freq_9,Freq_10),axis=3)
+Datos_CCA_10_7_8_9=np.reshape(Datos_CCA_10_7_8_91,(750,3,60))
+
+
+
+np.save("Datos_SSVEPmove_S3filtrado_D_C_P.npy",Datos_CCA_10_7_8_9)
+
+
+# np.save("Datos_SSVEPmove_Majofiltrada_D_C_P.npy",Datos_TRCA_8_10_40p1)
+
+
+            
+promedio_datos_6Hz=np.mean(FFTab_Datos_15Hz, axis=2)
+
+fig, ax = plt.subplots()
+ax.set_ylabel("Amplitud") #Nombre del eje y 
+ax.set_xlabel("freq") #Nombre del eje x 
+ax.set_title('FFT promedio de la Freq 6 Hz O2')
+ax.plot(Frecuencias_total15,promedio_datos_6Hz[:,0])
+plt.xticks(np.arange(0,20,2))
+plt.xlim([0,20])
+plt.grid()
+plt.show()
+
+fig, ax = plt.subplots()
+ax.set_ylabel("Amplitud") #Nombre del eje y 
+ax.set_xlabel("freq") #Nombre del eje x 
+ax.set_title('FFT promedio de la Freq 6 Hz Oz')
+ax.plot(Frecuencias_total15,promedio_datos_6Hz[:,1])
+plt.xticks(np.arange(0,20,2))
+plt.xlim([0,20])
+plt.grid()
+plt.show()
+
+fig, ax = plt.subplots()
+ax.set_ylabel("Amplitud") #Nombre del eje y 
+ax.set_xlabel("freq") #Nombre del eje x 
+ax.set_title('FFT promedio de la Freq 6 Hz O1')
+ax.plot(Frecuencias_total15,promedio_datos_6Hz[:,2])
+plt.xticks(np.arange(0,20,2))
+plt.xlim([0,20])
+plt.grid()
+plt.show()
+
+
+# fig, axs = plt.subplots(3, sharex=True, sharey=True)
+# fig.suptitle('FFT O2 - Oz - O1')
+# axs[0].plot(Frecuencias_total15, FFTab_Datos_15Hz[:,0,0])
+# axs[1].plot(Frecuencias_total15, FFTab_Datos_15Hz[:,1,0])
+# axs[2].plot(Frecuencias_total15,FFTab_Datos_15Hz[:,2,0])
+# plt.xlim([0,20])
+
+
+
+# fig.tight_layout()
+
+
+# """GRAFICAMOS LA FFT DE LOS DATOS"""
+# a=1
+# for i in range(0,60):
+        
+#         fig, ax = plt.subplots()
+#         ax.set_ylabel("Amplitud") #Nombre del eje y 
+#         ax.set_xlabel("freq") #Nombre del eje x 
+#         ax.set_title('FFT prueba '+ str(a))
+#         ax.plot(Frecuencias_total15,FFTab_Datos_15Hz[:,0,i])
+#         #Gráfica de la señal con el tiempo en milisegundos
+#         # ax.plot(Frecuencias_total15[pos1],FFTab_Datos_12Hz[i,pos1],'*' ,color="red")
+#         # ax.plot(Frecuencias_total15[pos2],FFTab_Datos_12Hz[i,pos2],'*' ,color="red")
+#         # ax.plot(Frecuencias_total15[pos3],FFTab_Datos_12Hz[i,pos3],'*' ,color="red")
+#         #plt.xticks(np.arange(6,18,1))
+#         #0plt.ylim([-2,50000])
+#         #plt.ylim([-1,10])
+#         plt.xticks(np.arange(6,22,1))
+#         plt.xlim([6,22])
+#         plt.grid()
+#         plt.show()
+#         a=a+1
+
+cantidad = 15    
+Target_10Hz = np.ones((cantidad,1)) # 12 Hz será el target 2
+Target_10Hz=np.transpose(Target_10Hz)
+
+
+Target_7Hz = np.ones((cantidad,1)) +1# 12 Hz será el target 2
+Target_7Hz=np.transpose(Target_7Hz)
+
+
+Target_8Hz = np.ones((cantidad,1)) +2# 12 Hz será el target 2
+Target_8Hz=np.transpose(Target_8Hz)
+
+
+Target_9Hz = np.ones((cantidad,1)) +3# 12 Hz será el target 2
+Target_9Hz=np.transpose(Target_9Hz)
+   
+#EXTRACCION DE PICOS
+
+def Extraccion_Picos(Posicion_Picos,Data):
+
+    for k in Posicion_Picos:
+        Picos_Canales_O1=Data[Posicion_Picos,0,:]
+        Picos_Canales_Oz=Data[Posicion_Picos,1,:]
+        Picos_Canales_O2=Data[Posicion_Picos,2,:]
+    
+    return Picos_Canales_O1,Picos_Canales_Oz,Picos_Canales_O2
+  
+
+Picos=[540,541,542,544,545,546,548,549,550,552,553,554]
+Canal_O1,Canal_Oz,Canal_O2=Extraccion_Picos(Picos, FFTab_Datos_15Hz)
+
+#SE EXTRAE LOS PICOS DE CADA CANAL PARA LAS FREQ 10,7,8,9
+
+Freq_10=np.transpose(np.concatenate((Canal_O1[:,:15],Canal_Oz[:,:15],Canal_O2[:,:15],Target_10Hz[:,:15]),axis=0))
+
+Freq_7=np.transpose(np.concatenate((Canal_O1[:,15:30],Canal_Oz[:,15:30],Canal_O2[:,15:30],Target_7Hz[:,:15]),axis=0))
+
+Freq_8=np.transpose(np.concatenate((Canal_O1[:,30:45],Canal_Oz[:,30:45],Canal_O2[:,30:45],Target_8Hz[:,:15]),axis=0))
+
+Freq_9=np.transpose(np.concatenate((Canal_O1[:,45:],Canal_Oz[:,45:],Canal_O2[:,45:],Target_9Hz[:,:15]),axis=0))
+
+
+Dtotalito=np.dstack((Freq_7,Freq_8,Freq_9,Freq_10))
+
+Dtotalitox=np.transpose(Dtotalito,(1,0,2))
+#------------------------------- Frecuencias, Amplitud y Target-----------------
+# Dtotalitoc=np.reshape(Dtotalitox,(3,240))
+
+#------------------------------- Frecuencias y Target-----------------
+Dtotalitoc=np.reshape(Dtotalitox,(37,60))
+
+Dtotalitoq=np.transpose(Dtotalitoc)
+
+
+Dtotalcaract = pd.DataFrame(Dtotalitoq, columns = ['O1-7Hz','O1-7Hz','O1-13Hz',
+                                                   'OZ-11Hz','OZ-12Hz','OZ-13Hz',
+                                                   'O2-11Hz','O2-12Hz','O1-13Hz',
+                                                   'O1-14Hz','O1-15Hz','O1-16Hz',
+                                                   'OZ-14Hz','OZ-15Hz','OZ-16Hz',
+                                                   'O2-14Hz','O2-15Hz','O1-16Hz',
+                                                   'O1-7Hz','O1-7Hz','O1-13Hz',
+                                                   'OZ-11Hz','OZ-12Hz','OZ-13Hz',
+                                                   'O2-11Hz','O2-12Hz','O1-13Hz',
+                                                   'O1-14Hz','O1-15Hz','O1-16Hz',
+                                                   'OZ-14Hz','OZ-15Hz','OZ-16Hz',
+                                                   'O2-14Hz','O2-15Hz','O1-16Hz',                                                 
+                                                  
+                                                   
+                                                   'Target'])
+
+Dtotalitoz = pd.DataFrame(Dtotalcaract)
+             
+
+Dtotalitoz.to_csv("Caracteristicas_Datos_1persona_3PICOS_15.csv")
+
+datosx=pd.read_csv("Caracteristicas_Datos_1persona_3PICOS_15.csv")
+import pandas as pd
+df=pd.DataFrame(datosx)
+
+#x=datosx.iloc[[740],:].values
+#x=np.delete(datosx, (140,741), axis=1)
+x=datosx.drop("Target",axis=1)
+y=datosx.Target
+
+#--------------------------------------------------KNN VECINOS-----------------------------
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.052, shuffle=False)
+
+#estandarizaremos las escalas
+from sklearn.preprocessing import StandardScaler
+sc=StandardScaler()
+
+#MLP BUSCAR
+kfoldss=4
+X_train=sc.fit_transform(X_train)
+X_test=sc.transform(X_test)     
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import datasets, metrics
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+from sklearn.metrics import confusion_matrix
+
+n_vecinos=5
+classifier_KNN= KNeighborsClassifier(n_neighbors=n_vecinos,metric="minkowski",p=2)
+
+
+classifier_KNN.fit(X_train, y_train) #REALIZA EL ENTRENAMIENTO DEL MODELO
+
+y_pred_KNN = classifier_KNN.predict(X_test) #PREDICE CON LOS VALORES DE ENTRADA X_TEST
+
+score_KNN = classifier_KNN.score(X_train,y_train) #con esto se obtiene el accuracy del entrenamient
+
+score_pred_KNN = metrics.accuracy_score(y_test, y_pred_KNN)#se obtiene el accuracy del testeo
+
+kf = KFold(n_splits=kfoldss, shuffle=False)
+
+
+scores_KNN_folds = cross_val_score(classifier_KNN, X_train, y_train, cv=kf, scoring="accuracy")
+CM_KNN=confusion_matrix(y_test,y_pred_KNN)
+
+# for valores_x,valores_y in kf.split(x):
+#     print("entrenamiento: ", df.iloc[valores_x], "prueba: ", df.iloc[valores_y])
+#--------------------------------NAIVE BAYES-----------------------------
+from sklearn.naive_bayes import GaussianNB
+
+classifier_NB = GaussianNB()
+
+classifier_NB.fit(X_train,y_train)
+
+y_pred_NB=classifier_NB.predict(X_test)
+
+
+score_NB = classifier_NB.score(X_train,y_train)
+
+score_pred_NB = metrics.accuracy_score(y_test, y_pred_NB)#se obtiene el accuracy del testeo
+
+scores_NB_folds = cross_val_score(classifier_NB, X_train, y_train, cv=kf, scoring="accuracy")
+
+CM_NB=confusion_matrix(y_test,y_pred_NB)
+#print(CM_NB)
+
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+lda = LDA(n_components=1)
+# x_train=lda.fit_transform(X_train,y_train)
+# x_test=lda.transform(X_test)
+
+from sklearn.linear_model import LogisticRegression
+
+clasificador_LDA = LogisticRegression()
+clasificador_LDA.fit(X_train,y_train)
+
+y_pred_LDA=clasificador_LDA.predict(X_test)
+
+score_LDA = clasificador_LDA.score(X_train,y_train)
+
+score_pred_LDA = metrics.accuracy_score(y_test, y_pred_LDA)#se obtiene el accuracy del testeo
+
+scores_LDA_folds = cross_val_score(clasificador_LDA, X_train, y_train, cv=kf, scoring="accuracy")
+CM_LDA=confusion_matrix(y_test,y_pred_LDA) 
+#print(CM_LDA)
+
+
+from sklearn import svm
+
+#Create a svm Classifier
+clf_svm = svm.SVC(kernel='sigmoid') # Linear Kernel
+
+#Train the model using the training sets
+clf_svm.fit(X_train, y_train)
+
+#Predict the response for test dataset
+y_pred_svm = clf_svm.predict(X_test)
+
+score_svm = clf_svm.score(X_train,y_train)
+
+score_pred_svm = metrics.accuracy_score(y_test, y_pred_svm)#se obtiene el accuracy del testeo
+
+scores_svm_folds = cross_val_score(clf_svm, X_train, y_train, cv=kf, scoring="accuracy")
+CM_svm=confusion_matrix(y_test,y_pred_svm)
+
+
+
+print("------------------------------------")
+print("RESULTADOS DEL MODELO KNN VECINOS " + str(n_vecinos))
+print("accuracy del modelo Knn vecinos", score_KNN)
+
+print("accuracy del Testeo Knn vecinos", score_pred_KNN) 
+
+print("Metricas cross_validation", scores_KNN_folds)
+ 
+print("Media de cross_validation", scores_KNN_folds.mean())
+
+print("------------------------------------")
+            
+
+
+print("------------------------------------")
+print("RESULTADOS DEL MODELO BAYES NAIVE" )
+print("accuracy del modelo Knn vecinos", score_NB)
+
+print("accuracy del Testeo Knn vecinos", score_pred_NB) 
+
+print("Metricas cross_validation", scores_NB_folds)
+ 
+print("Media de cross_validation", scores_NB_folds.mean())
+
+print("------------------------------------")
+
+print("------------------------------------")
+print("RESULTADOS DEL MODELO LDA" )
+print("accuracy del modelo Knn vecinos", score_LDA)
+
+print("accuracy del Testeo Knn vecinos", score_pred_LDA) 
+
+print("Metricas cross_validation", scores_LDA_folds)
+ 
+print("Media de cross_validation", scores_LDA_folds.mean())
+
+print("------------------------------------")
+         
+
+
+
+print("------------------------------------")
+print("RESULTADOS DEL MODELO SVM" )
+print("accuracy del modelo Knn vecinos", score_svm)
+
+print("accuracy del Testeo Knn vecinos", score_pred_svm) 
+
+print("Metricas cross_validation", scores_svm_folds)
+ 
+print("Media de cross_validation", scores_svm_folds.mean())
+
+print("------------------------------------")
+
+# print("------------------------------------")
+# print("RESULTADOS DEL MODELO PERCEPTRON" )
+# print("accuracy del modelo Knn vecinos", score_ppn)
+
+# print("accuracy del Testeo Knn vecinos", score_pred_ppn) 
+
+# print("Metricas cross_validation", scores_ppn_folds)
+ 
+# print("Media de cross_validation", scores_ppn_folds.mean())
+
+# print("------------------------------------")
+
+k_range = range(1, 10)
+scores = []
+for k in k_range:
+    knn = KNeighborsClassifier(n_neighbors = k)
+    knn.fit(X_train, y_train)
+    scores.append(knn.score(X_test, y_test))
+plt.figure()
+plt.xlabel('Parámetro k del modelo KNN')
+plt.ylabel('Precisión (%)')
+plt.scatter(k_range, scores)
+plt.xticks([0,2,4,6,8,10])
