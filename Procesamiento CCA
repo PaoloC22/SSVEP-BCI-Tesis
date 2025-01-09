@@ -1,0 +1,154 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Feb 10 23:52:24 2023
+
+@author: Luis Casas
+"""
+import numpy as np
+import numpy as np
+from scipy.signal import butter, lfilter
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+from scipy import signal
+import matplotlib.pyplot as plt
+from scipy.misc import electrocardiogram
+from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_prominences
+import matplotlib.pyplot as plt
+from sklearn.cross_decomposition import CCA
+# ---------------------------------------- LECTURA DE LOS DATOS .MAT   ----------------------------------------------------
+# Datos = open('Datos_Paralelismo_7_ms.csv')
+# numpy_array = np.loadtxt(Datos)
+
+import csv
+import numpy
+import pandas as pd
+from operator import itemgetter
+
+
+import matplotlib.pyplot as plt
+
+
+
+def getReferenceSignal(length, target_freq, samplingRate):
+    # generate sinusoidal reference templates for CCA for the first and second harmonics
+    reference_signals = []
+    t = np.arange(0, (length/(samplingRate)), step=1.0/(samplingRate))
+    #print(t)
+    #First harmonics/Fundamental freqeuncy
+    reference_signals.append(np.sin(np.pi*2*target_freq*t))
+    reference_signals.append(np.cos(np.pi*2*target_freq*t))
+    
+    reference_signals.append(np.sin(np.pi*4*target_freq*t))
+    reference_signals.append(np.cos(np.pi*4*target_freq*t))
+    reference_signals = np.array(reference_signals)
+    return reference_signals
+
+def getReferenceSignals(length_signal_w,target_freqs):
+    freq1 = getReferenceSignal(length_signal_w,target_freqs[0],250)
+    freq2 = getReferenceSignal(length_signal_w,target_freqs[1],250)
+    freq3 = getReferenceSignal(length_signal_w,target_freqs[2],250)
+    freq4 = getReferenceSignal(length_signal_w,target_freqs[3],250)
+    freqs = np.array([freq1,freq2,freq3,freq4])
+    
+    return freqs
+
+
+NN=1000
+#singalss=getReferenceSignals(1000,target_freqs)
+
+
+
+
+def get_corr(data_eeg, model_signals,target_freqs):
+    cca = CCA(n_components=1)
+    len_result = model_signals.shape[0]
+    results = dict(zip(target_freqs,np.zeros(len_result)))
+
+    for index in np.arange(len_result):
+        #model_signal_temp = model_signals[index].reshape(-1,1)
+        cca.fit(data_eeg.T, model_signals[index,:,:].T)
+        O1_a,O1_b = cca.transform(data_eeg.T, model_signals[index,:,:].T)
+        results[target_freqs[index]] = np.corrcoef(O1_a[:,0],O1_b[:,0])[0,1]
+    
+    return results
+
+def getMaxFreq(corr):
+    return max(corr.items(), key=itemgetter(1))[0]
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    return butter(order, [lowcut, highcut], fs=fs, btype='band')
+
+def bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y    
+
+
+def getAcc(data,length_signal_w,target_freqs):
+    num_aciertos = 0
+    num_aciertos_freqs = [0,0,0,0]
+    num_pruebas = len(data)
+    #xprint("numero de pruebas: ", num_pruebas)
+    referenceSignals = getReferenceSignals(length_signal_w,target_freqs)
+    print("forma de las señales de referencia: ", np.shape(referenceSignals))
+    for index in range(num_pruebas):
+        #data_temp = Preprocessing(data[index])
+        res = get_corr(data[index],referenceSignals,target_freqs)
+        #print(data[index])
+        print("res: ", res)
+        freq_predicha = getMaxFreq(res)
+        print("freq predicha: ", freq_predicha)
+        if(freq_predicha==target_freqs[index%4]):
+            num_aciertos += 1
+            num_aciertos_freqs[index%4] += 1
+    print(num_aciertos_freqs)
+    return num_aciertos/num_pruebas*100
+
+
+#data_nueva = np.load('C:/Users/Luis Casas/Desktop/TESIS2/BASE DE DATOS DESCARGADA/Tesis_codigo/all_db.npy')
+#data_2freq= np.load('C:/Users/Luis Casas/Desktop/TESIS2/BASE DE DATOS DESCARGADA/Datos_SSVEPmove_Paolo_D_C_P.npy')
+#Datos_SSVEP_Paolofiltrada_D_C_P
+data_2freq1= np.load('C:/Users/Luis Casas/Desktop/TESIS2/BASE DE DATOS DESCARGADA/Datos_SSVEPmove_S3filtrado_D_C_P.npy')
+
+
+
+data_2freq=np.transpose(data_2freq1,(2,1,0))
+
+cantidad_datos=len(data_2freq1)
+target_freqs=[7,8,9,10]
+resultado=getAcc(data_2freq[:,:,:], cantidad_datos, target_freqs)
+    
+# FFT_Datos_12Hz= np.fft.fft(singalss[3,:],NN)
+# FFTa_Datos_12Hz = np.fft.fftshift(FFT_Datos_12Hz)
+# FFTab_Datos_12Hz=np.abs(FFTa_Datos_12Hz)
+
+# Fs=250
+
+# Frecuencias_total15=np.arange(start = -NN/2,stop = NN/2)*Fs/NN
+
+
+# fig, ax = plt.subplots()
+# ax.set_ylabel("Amplitud") #Nombre del eje y 
+# ax.set_xlabel("freq") #Nombre del eje x 
+# ax.set_title('FFT promedio de la Freq 8 Hz')
+# ax.plot(Frecuencias_total15,FFTab_Datos_12Hz)
+# #plt.xticks(np.arange(0,32,2))
+# plt.xlim([0,20])
+# plt.grid()
+# plt.show()
+
+
+
+
+
+# num_aciertos = 0
+# num_aciertos_freqs = [0,0,0,0]
+# num_pruebas = len(data)
+# referenceSignals = self.getReferenceSignals()
+# for index in range(num_pruebas):
+#     data_temp = self.Preprocessing(data[index])
+#     res = self.get_corr(data_temp,referenceSignals)
+#     freq_predicha = self.getMaxFreq(res)
+#     if(freq_predicha==self.target_freqs[index%4]):
+#         num_aciertos += 1
+#         num_aciertos_freqs[index%4] += 1
