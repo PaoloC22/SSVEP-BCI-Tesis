@@ -1,0 +1,64 @@
+import time
+
+from pyOpenBCI import OpenBCICyton
+import pandas as pd
+"""
+class LecturaBCI:
+    def __init__(self):
+        self._running = False
+        self.data = []
+        self.board = None
+    def log_sample(self, sample):
+        if not self._running:
+            self.board.stop_stream()
+        self.data.append({'1':sample.channels_data})
+        #print(self.data)
+    def Lectura(self,startDataAdq,l):
+        self.board = OpenBCICyton(port='COM3')
+        _startDataAdq = False
+        while _startDataAdq == False:
+            l.acquire()
+            _startDataAdq=startDataAdq.value
+            l.release()
+        print("inicio de toma de datos: ")
+        self._running = True
+        #pool.acquire()
+        self.board.start_stream(self.log_sample)
+    def kill(self):
+        #df = pd.DataFrame(data=c.data)
+        #df.to_csv('Pruebitaq.csv', index=False, header=True)
+        self._running = False
+"""
+class LecturaBCI:
+    def __init__(self):
+        self._running = False
+        self.data = []
+        self.board = None
+    def log_sample(self, sample):
+        if not self._running:
+            self.board.stop_stream()
+        self.data.append({'1':sample.channels_data})
+        #print(self.data)
+    def Lectura(self,l,startDataAdq):
+        self.board = OpenBCICyton(port='COM3')
+        _startDataAdq = False
+        while _startDataAdq == False:
+            l.acquire()
+            _startDataAdq = startDataAdq.value
+            l.release()
+
+        # Se limpia la bandera
+
+
+        print("inicio de toma de datos: ")
+        self._running = True
+        #pool.acquire()
+        self.board.start_stream(self.log_sample)
+
+        l.acquire()
+        startDataAdq.value = False
+        l.release()
+    def kill(self):
+        #df = pd.DataFrame(data=c.data)
+        #df.to_csv('Pruebitaq.csv', index=False, header=True)
+        self._running = False
